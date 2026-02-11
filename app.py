@@ -70,14 +70,14 @@ ALLOWED_CARD_EXTENSIONS = {".drf", ".dr2", ".dr3", ".dr4", ".txt", ".csv"}
 
 
 def get_extension(filename: str) -> str:
-    """Return lowercase extension with leading dot, or empty string."""
     if not filename or "." not in filename:
         return ""
     return "." + filename.rsplit(".", 1)[-1].lower()
 
-
 @st.cache_data(show_spinner=False)
 def parse_brisnet_card(file_bytes: bytes, filename: str) -> pd.DataFrame:
+@st.cache_data(show_spinner=False)
+def parse_drf(file_bytes: bytes, filename: str) -> pd.DataFrame:
     text = file_bytes.decode(errors="ignore")
     lines = [ln for ln in text.splitlines() if ln.strip()]
     raw = "\n".join(lines)
@@ -328,6 +328,7 @@ def main():
     st.title("Proprietary Thoroughbred Speed Figures + Race Winner Analyzer")
     st.write(
         "Upload Brisnet card files (`.drf`, `.dr2`, `.dr3`, `.dr4`) for a race card, then optionally upload historical results "
+        "Upload Brisnet `.drf` files for a race card, then optionally upload historical results "
         "to detect track bias and blend it into the current race analysis."
     )
 
@@ -337,6 +338,9 @@ def main():
             "Upload Brisnet race card files (.drf/.dr2/.dr3/.dr4)",
             accept_multiple_files=True,
             help="Any file can be selected; the app will validate extensions and process Brisnet card types (.drf/.dr2/.dr3/.dr4).",
+            "Upload Brisnet race card files (.drf)",
+            type=["drf", "txt", "csv"],
+            accept_multiple_files=True,
         )
         history_file = st.file_uploader(
             "Optional: Upload historical results (CSV/XLSX)",
@@ -367,6 +371,10 @@ def main():
         st.stop()
 
     frames = [parse_brisnet_card(f.getvalue(), f.name) for f in valid_card_files]
+        st.info("Upload at least one .drf file to begin analysis.")
+        st.stop()
+
+    frames = [parse_drf(f.getvalue(), f.name) for f in drf_files]
     card = pd.concat(frames, ignore_index=True)
     card = card.dropna(subset=["horse"])
 
