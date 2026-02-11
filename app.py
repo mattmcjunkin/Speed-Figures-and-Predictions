@@ -66,7 +66,7 @@ DEFAULT_COLUMNS = [
 
 
 @st.cache_data(show_spinner=False)
-def parse_brisnet_card(file_bytes: bytes, filename: str) -> pd.DataFrame:
+def parse_drf(file_bytes: bytes, filename: str) -> pd.DataFrame:
     text = file_bytes.decode(errors="ignore")
     lines = [ln for ln in text.splitlines() if ln.strip()]
     raw = "\n".join(lines)
@@ -316,15 +316,15 @@ def main():
     st.set_page_config(page_title="Thoroughbred Race Analyzer", layout="wide")
     st.title("Proprietary Thoroughbred Speed Figures + Race Winner Analyzer")
     st.write(
-        "Upload Brisnet card files (`.drf`, `.dr2`, `.dr3`, `.dr4`) for a race card, then optionally upload historical results "
+        "Upload Brisnet `.drf` files for a race card, then optionally upload historical results "
         "to detect track bias and blend it into the current race analysis."
     )
 
     with st.sidebar:
         st.header("Inputs")
         drf_files = st.file_uploader(
-            "Upload Brisnet race card files (.drf/.dr2/.dr3/.dr4)",
-            type=["drf", "dr2", "dr3", "dr4", "txt", "csv"],
+            "Upload Brisnet race card files (.drf)",
+            type=["drf", "txt", "csv"],
             accept_multiple_files=True,
         )
         history_file = st.file_uploader(
@@ -339,10 +339,10 @@ def main():
         use_bias = st.checkbox("Use historical bias adjustments", value=True)
 
     if not drf_files:
-        st.info("Upload at least one Brisnet card file (.drf/.dr2/.dr3/.dr4) to begin analysis.")
+        st.info("Upload at least one .drf file to begin analysis.")
         st.stop()
 
-    frames = [parse_brisnet_card(f.getvalue(), f.name) for f in drf_files]
+    frames = [parse_drf(f.getvalue(), f.name) for f in drf_files]
     card = pd.concat(frames, ignore_index=True)
     card = card.dropna(subset=["horse"])
 
