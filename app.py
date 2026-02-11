@@ -65,6 +65,17 @@ DEFAULT_COLUMNS = [
 ]
 
 
+
+ALLOWED_CARD_EXTENSIONS = {".drf", ".dr2", ".dr3", ".dr4", ".txt", ".csv"}
+
+
+def get_extension(filename: str) -> str:
+    if not filename or "." not in filename:
+        return ""
+    return "." + filename.rsplit(".", 1)[-1].lower()
+
+@st.cache_data(show_spinner=False)
+def parse_brisnet_card(file_bytes: bytes, filename: str) -> pd.DataFrame:
 @st.cache_data(show_spinner=False)
 def parse_drf(file_bytes: bytes, filename: str) -> pd.DataFrame:
     text = file_bytes.decode(errors="ignore")
@@ -316,6 +327,7 @@ def main():
     st.set_page_config(page_title="Thoroughbred Race Analyzer", layout="wide")
     st.title("Proprietary Thoroughbred Speed Figures + Race Winner Analyzer")
     st.write(
+        "Upload Brisnet card files (`.drf`, `.dr2`, `.dr3`, `.dr4`) for a race card, then optionally upload historical results "
         "Upload Brisnet `.drf` files for a race card, then optionally upload historical results "
         "to detect track bias and blend it into the current race analysis."
     )
@@ -323,6 +335,9 @@ def main():
     with st.sidebar:
         st.header("Inputs")
         drf_files = st.file_uploader(
+            "Upload Brisnet race card files (.drf/.dr2/.dr3/.dr4)",
+            accept_multiple_files=True,
+            help="Any file can be selected; the app will validate extensions and process Brisnet card types (.drf/.dr2/.dr3/.dr4).",
             "Upload Brisnet race card files (.drf)",
             type=["drf", "txt", "csv"],
             accept_multiple_files=True,
@@ -339,6 +354,23 @@ def main():
         use_bias = st.checkbox("Use historical bias adjustments", value=True)
 
     if not drf_files:
+        st.info("Upload at least one Brisnet card file (.drf/.dr2/.dr3/.dr4) to begin analysis.")
+        st.stop()
+
+    valid_card_files = [f for f in drf_files if get_extension(f.name) in ALLOWED_CARD_EXTENSIONS]
+    invalid_card_files = [f.name for f in drf_files if get_extension(f.name) not in ALLOWED_CARD_EXTENSIONS]
+
+    if invalid_card_files:
+        st.warning(
+            "Skipped unsupported file(s): " + ", ".join(invalid_card_files) +
+            ". Supported card extensions: .drf, .dr2, .dr3, .dr4 (plus .txt/.csv)."
+        )
+
+    if not valid_card_files:
+        st.error("No supported Brisnet card files were provided.")
+        st.stop()
+
+    frames = [parse_brisnet_card(f.getvalue(), f.name) for f in valid_card_files]
         st.info("Upload at least one .drf file to begin analysis.")
         st.stop()
 

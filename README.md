@@ -1,5 +1,9 @@
 # Thoroughbred Speed Figure & Race Analyzer
 
+Streamlit app for creating proprietary speed figures from Brisnet-style `.drf` / `.dr2` / `.dr3` / `.dr4` race cards and identifying the most likely winner in each race.
+
+## Features
+- Upload one or more Brisnet card files (`.drf`, `.dr2`, `.dr3`, `.dr4`) for a race card.
 Streamlit app for creating proprietary speed figures from Brisnet-style `.drf` race cards and identifying the most likely winner in each race.
 
 ## Features
@@ -16,6 +20,7 @@ streamlit run app.py
 ```
 
 ## Expected input columns
+The Brisnet card parser is tolerant and tries to map common columns to:
 The DRF parser is tolerant and tries to map common columns to:
 - `track`, `race`, `horse`, `post`, `surface`, `distance`
 - `early_pace`, `middle_pace`, `late_pace`
@@ -23,3 +28,6 @@ The DRF parser is tolerant and tries to map common columns to:
 
 Historical file preferred columns:
 - `track`, `post`, `finish_position`, `run_style`
+
+
+> Note: The uploader accepts any file selection and validates extensions in-app to avoid browser/Streamlit extension-filter quirks.
